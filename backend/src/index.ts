@@ -1,24 +1,20 @@
-// backend/src/index.ts
 import express from 'express';
 import cors from 'cors';
+import apiRouter from './routes/api';
 import dotenv from 'dotenv';
 dotenv.config();
 
-export function createApp() {
-  const app = express();
-  app.use(cors());
-  app.get('/health', (_req, res) => res.send('OK'));
-  return app;
-}
+const app = express();
+app.use(cors({ origin: true, credentials: true }));
+app.use(express.json());
 
-async function main() {
-  const port = Number(process.env.PORT ?? 4000);
-  const app = createApp();
-  await app.listen(port);
-  console.log(`🚀 TS server listening on http://localhost:${port}`);
-}
+// Mount all /api routes, including our new /stat-comparison
+app.use('/api', apiRouter);
 
-main().catch(err => {
-  console.error('Fatal startup error:', err);
-  process.exit(1);
+// Healthcheck
+app.get('/health', (_req, res) => res.send('OK'));
+
+const PORT = Number(process.env.PORT || 4000);
+app.listen(PORT, () => {
+  console.log(`🚀 Backend listening on http://localhost:${PORT}`);
 });

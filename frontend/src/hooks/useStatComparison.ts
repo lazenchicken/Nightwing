@@ -9,28 +9,46 @@ export interface Stat {
   actual: number;
 }
 
-export function useStatComparison() {
+export function useStatComparison(
+  spec: string,
+  realm: string,
+  character: string
+) {
   const [data, setData] = useState<Stat[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
 
-useEffect(() => {
-  setLoading(true);
-  fetch(`/api/stat-comparison?spec=${spec}&realm=${realm}&character=${character}`)
-    .then(r => r.json())
-    .then(json => {
-      console.log('stat-comparison payload:', json);
-      setData(json);
-      setLoading(false);
-    })
-    .catch(e => {
-      setError(e.message);
-      setLoading(false);
-    });
-}, [spec, realm, character]);
+  useEffect(() => {
+    if (!spec || !realm || !character) {
+      // don't run until we have all three values
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    axios
+      .get<Stat[]>(
+        `/api/stat-comparison`,
+        {
+          params: { spec, realm, character }
+        }
+      )
+      .then((res) => {
+        console.log('stat-comparison payload:', res.data);
+        setData(res.data);
+      })
+      .catch((e) => {
+        console.error('stat-comparison error:', e);
+        setError(e.message || 'Unknown error');
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, [spec, realm, character]);
 
   // Sort a copy of the data by the `actual` field descending
   const sortedByActual = [...data].sort((a, b) => b.actual - a.actual);
 
-  // Return a CLEAN object literal, no stray commas or comments inside
-  return { sortedByActual, error };
+  return { data, sortedByActual, error, loading };
 }
