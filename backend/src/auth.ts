@@ -1,3 +1,4 @@
+import express from 'express';
 import passport from 'passport';
 import { PrismaClient } from '@prisma/client';
 import dotenv from 'dotenv';
