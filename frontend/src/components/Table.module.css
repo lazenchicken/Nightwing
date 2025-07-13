@@ -1,0 +1,17 @@
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--panel);
+  color: var(--fg);
+}
+th, td {
+  padding: 0.5rem 1rem;
+  border-bottom: 1px solid var(--border);
+}
+th {
+  background: var(--border);
+  text-align: left;
+}
+tr:hover td {
+  background: rgba(255,255,255,0.05);
+}

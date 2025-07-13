@@ -1,0 +1,23 @@
+:root {
+  --bg:    #0f0f1a;
+  --panel: #17172b;
+  --fg:    #e0e0e0;
+  --fg-muted: #888;
+  --accent-primary: #4dd0e1;
+  --accent-dps:     #f59e0b;
+  --accent-cd:      #8b5cf6;
+  --accent-heal:    #3b82f6;
+  --border: #2a2a42;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0; padding: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: Inter, sans-serif;
+}
+
+a { color: var(--accent-primary); text-decoration: none; }
+a:hover { text-decoration: underline; }

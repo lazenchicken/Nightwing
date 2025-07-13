@@ -1,0 +1,9 @@
+.card {
+  background: var(--panel);
+  padding: 1rem;
+  border-radius: 8px;
+}
+h4 { margin-top:0; }
+ul { list-style:none; padding:0; }
+li { margin:0.5rem 0; }
+strong { color: var(--accent-dps); }

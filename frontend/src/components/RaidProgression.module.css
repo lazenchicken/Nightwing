@@ -1,0 +1,5 @@
+.card { background: var(--panel); padding:1rem; border-radius:8px; }
+.raid { margin-bottom:1rem; }
+h5 { margin:0.5rem 0 0.25rem; color: var(--accent-primary); }
+ul { list-style:none; padding:0; }
+li { margin:0.25rem 0; }

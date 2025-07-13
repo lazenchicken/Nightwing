@@ -1,0 +1,20 @@
+.card {
+  background: var(--panel);
+  padding: 1rem;
+  border-radius: 8px;
+}
+.header {
+  display: flex; align-items: center; gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+.icon {
+  width: 36px; height: 36px; border-radius:4px; border:1px solid var(--border);
+}
+.name {
+  font-size:1.2rem; color: var(--fg);
+}
+.details {
+  display: grid; grid-template-columns: repeat(2,1fr); gap:0.5rem;
+  color: var(--fg-muted);
+}
+.details strong { color: var(--fg); }

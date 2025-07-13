@@ -1,0 +1,33 @@
+version: '3.8'
+services:
+  redis:
+    image: redis:6-alpine
+    ports: ["6379:6379"]
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: nightwing
+      POSTGRES_USER: nightwing
+      POSTGRES_PASSWORD: supersecret
+    ports: ["5432:5432"]
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+  backend:
+    build: ./backend
+    env_file: .env
+    ports: ["4000:4000"]
+    depends_on:
+      - redis
+      - db
+
+  frontend:
+    build: ./frontend
+    env_file: .env
+    ports: ["3000:80"]
+    depends_on:
+      - backend
+
+volumes:
+  db_data:
