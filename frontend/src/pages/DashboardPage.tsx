@@ -6,29 +6,30 @@ import StatComparisonChart from '../components/StatComparisonChart';
 
 export default function DashboardPage() {
   const { realm, character } = useStore();
-
-  // Hard-code spec for now or pull from your own UI
+  // TODO: replace with a dropdown or derive from character’s class
   const spec = 'druid-balance-pve';
 
-  const { data, sortedByActual, error, loading } = useStatComparison(
-    spec,
-    realm,
-    character
-  );
+  const { sortedByActual, loading, error } =
+    useStatComparison(spec, realm, character);
 
   return (
-    <div>
-      {/* … other layout … */}
+    <div style={{ display: 'flex', height: '100vh' }}>
+      <FiltersSidebar />
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+        <Header />
+        <main style={{ padding: 16, overflow: 'auto', display: 'grid', gap: 16 }}>
+          <ProfileCard realm={realm} name={character} />
 
-      {loading && <p>Loading chart…</p>}
-      {error && <p style={{ color: 'red' }}>Error: {error}</p>}
+          {/* stat chart */}
+          <StatComparisonChart
+            data={sortedByActual}
+            loading={loading}
+            error={error}
+          />
 
-      {!loading && !error && (
-        <StatComparisonChart
-          data={sortedByActual}
-          onBarClick={(stat) => console.log('clicked', stat)}
-        />
-      )}
+          {/* …rest of page… */}
+        </main>
+      </div>
     </div>
   );
 }
