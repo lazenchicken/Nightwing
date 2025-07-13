@@ -1,0 +1,9 @@
+/* frontend/src/components/ErrorPanel.module.css */
+.errorBox {
+  background: #3c1f3d;    /* Dark-violet panel */
+  color: #f5a9b8;         /* Soft red text */
+  padding: 12px 16px;
+  border-radius: 6px;
+  margin-bottom: 16px;
+  font-size: 0.95rem;
+}

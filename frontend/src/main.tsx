@@ -2,13 +2,16 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import App from './App';
-import { ThemeProvider } from './context/ThemeContext';
 import './styles/global.css';
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <BrowserRouter>
-    <ThemeProvider>
+const root = ReactDOM.createRoot(
+  document.getElementById('root')!
+);
+
+root.render(
+  <React.StrictMode>
+    <BrowserRouter>
       <App />
-    </ThemeProvider>
-  </BrowserRouter>
+    </BrowserRouter>
+  </React.StrictMode>
 );

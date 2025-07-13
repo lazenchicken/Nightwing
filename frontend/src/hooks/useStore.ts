@@ -1,19 +1,20 @@
+// frontend/src/hooks/useStore.ts
 import create from 'zustand';
 
-interface StoreState {
+interface Store {
   realm: string;
   character: string;
-  specKey: string;
+  role: 'dps' | 'healing' | 'tank';
   setRealm: (r: string) => void;
   setCharacter: (c: string) => void;
-  setSpecKey: (k: string) => void;
+  setRole: (r: 'dps'|'healing'|'tank') => void;
 }
 
-export const useStore = create<StoreState>(set => ({
+export const useStore = create<Store>((set) => ({
   realm: 'Area52',
   character: 'MyCharacter',
-  specKey: 'druid-balance-pve',
-  setRealm: (realm) => set({ realm }),
-  setCharacter: (character) => set({ character }),
-  setSpecKey: (specKey) => set({ specKey }),
+  role: 'dps',    // default; can switch via some UI
+  setRealm: (r) => set({ realm: r }),
+  setCharacter: (c) => set({ character: c }),
+  setRole: (r) => set({ role: r })
 }));

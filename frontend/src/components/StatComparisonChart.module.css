@@ -1,0 +1,20 @@
+/* StatComparisonChart.module.css */
+
+.container {
+  background: var(--panel);
+  padding: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+}
+
+.title {
+  margin: 0 0 0.5rem;
+  color: var(--fg);
+  font-size: 1.1rem;
+}
+
+.loading {
+  color: var(--fg-muted);
+  padding: 2rem;
+  text-align: center;
+}

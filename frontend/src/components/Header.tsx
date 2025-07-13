@@ -1,22 +1,22 @@
+// frontend/src/components/Header.tsx
 import React from 'react';
-import { useAuth } from '../hooks/useAuth';
+import styles from './Header.module.css';
+import SearchBar from './SearchBar';
 
 export default function Header() {
-  const { user, loading } = useAuth();
-
   return (
-    <header style={{
-      padding: '1rem', background: 'var(--panel)',
-      display: 'flex', alignItems: 'center'
-    }}>
-      <h1 style={{ margin: 0, color: 'var(--fg)' }}>Nightwing</h1>
-      <div style={{ marginLeft: 'auto' }}>
-        {loading
-          ? '…'
-          : user
-            ? <form method="post" action="/auth/logout"><button>Logout</button></form>
-            : <a href="/auth/bnet"><img src="/assets/bnet-logo.png" alt="Login" style={{ height:32 }} /></a>
-        }
+    <header className={styles.header}>
+      {/* Row 1: Brand on left, actions on right */}
+      <div className={styles.row1}>
+        <div className={styles.brand}>Nightwing</div>
+        <div className={styles.actions}>
+          {/* e.g. <ThemeToggle /> <HelpIcon /> <LoginButton /> */}
+        </div>
+      </div>
+
+      {/* Row 2: Full-width search bar */}
+      <div className={styles.row2}>
+        <SearchBar placeholder="Search players..." />
       </div>
     </header>
   );

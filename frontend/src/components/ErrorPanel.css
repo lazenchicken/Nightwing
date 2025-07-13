@@ -1,0 +1,10 @@
+/* ErrorPanel.module.css */
+
+.errorBox {
+  background: #3c1f3d;      /* dark-red panel to fit Nightwing’s dark theme */
+  color: #f5a9b8;           /* soft pastel red for contrast */
+  padding: 12px 16px;
+  border-radius: 6px;
+  margin-bottom: 16px;
+  font-size: 0.95rem;
+}

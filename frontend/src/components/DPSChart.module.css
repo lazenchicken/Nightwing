@@ -1,0 +1,11 @@
+.container {
+  background: var(--panel);
+  padding: 1rem;
+  border-radius: 8px;
+}
+
+.subtitle {
+  font-size: 0.85rem;
+  color: var(--fg-muted);
+  margin-bottom: 8px;
+}

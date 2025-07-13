@@ -1,72 +1,80 @@
+// backend/src/routes/api.ts
 import express from 'express';
-import { Router } from 'express';
 import axios from 'axios';
 import { cacheable } from '../cache';
+const router = express.Router();
 
-const router = Router();
+// … your existing proxy routes here …
 
-// … your existing proxyCached endpoints …
+//  ──────────────────────────────────────────────────────
+//  STAT COMPARISON
+//  ──────────────────────────────────────────────────────
+// GET /api/stat-comparison?spec=<specSlug>&character=<charName>&realm=<realmName>
+// src/routes/api.ts
+router.get('/stat-comparison', (req, res) => {
+  const { spec, realm, character } = req.query;
+  if (!spec || !realm || !character) {
+    return res.status(400).json({ error: 'spec, character & realm are required' });
+  }
 
-// NEW: merge Icy Veins, Archon.gg & Warcraft Logs weights
-router.get(
-  '/stat-comparison',
-  async (req, res) => {
-    try {
-      const spec = String(req.query.spec || 'druid-balance-pve');
-
-      // 1) Icy Veins scrape
-      const icyP = cacheable(`icy:${spec}`, 600, async () => {
+  try {
+    // 1) Icy Veins weights
+    const icyKey = `icy:${spec}`;
+    const icy: { stat: string; weight: number }[] = await cacheable(
+      icyKey, 600, async () => {
         const html = (await axios.get(`https://www.icy-veins.com/wow/${spec}`)).data;
         const cheerio = require('cheerio');
-        const $        = cheerio.load(html);
-        const out: Array<{ stat: string; weight: number }> = [];
-        $('h2:contains("Stat Priority")').next('table')
-          .find('tbody tr').each((_, row) => {
-            const cols = $(row).find('td');
-            const stat = cols.eq(0).text().trim();
-            const w    = parseFloat(cols.eq(1).text().replace(/[^0-9.]/g, ''));
-            if (stat && !isNaN(w)) out.push({ stat, weight: w });
-          });
+        const $ = cheerio.load(html);
+        const out: any[] = [];
+        $('h2:contains("Stat Priority")').next('table').find('tbody tr').each((_, tr) => {
+          const cols = $(tr).find('td');
+          const stat = cols.eq(0).text().trim();
+          const weight = parseFloat(cols.eq(1).text().replace(/[^0-9.]/g,''));
+          if (stat && !isNaN(weight)) out.push({ stat, weight });
+        });
         return out;
-      });
+      }
+    );
 
-      // 2) Archon.gg
-      const archonP = cacheable(`archon:${spec}`, 600, async () => {
-        const { data } = await axios.get<Array<{ stat: string; avgWeight: number }>>(
-          'https://api.archon.gg/stats',
-          { params: { spec, key: process.env.ARCHON_KEY } }
-        );
-        return data;
-      });
+    // 2) Archon.gg weights
+    const archonKey = `archon:${spec}`;
+    const archon: { stat: string; avgWeight: number }[] = await cacheable(
+      archonKey, 600, async () => {
+        const { data } = await axios.get('https://api.archon.gg/stats', {
+          headers: { 'x-api-key': process.env.ARCHON_KEY },
+          params: { spec },
+        });
+        return data; // assume [{ stat, avgWeight }, …]
+      }
+    );
 
-      // 3) Warcraft Logs computed weights
-      const actualP = cacheable(`wcl:${spec}`, 600, async () => {
-        const { data } = await axios.get<Array<{ stat: string; computedWeight: number }>>(
-          'https://www.warcraftlogs.com/v1/parses/weight',
-          { params: { spec, metric: 'dps', api_key: process.env.WARCRAFTLOGS_KEY } }
-        );
-        return data;
-      });
+    // 3) “Actual” weights from Warcraft Logs
+    const actualKey = `actual:${realm}:${character}:${spec}`;
+    const actual: { stat: string; computedWeight: number }[] = await cacheable(
+      actualKey, 600, async () => {
+        const url = 'https://www.warcraftlogs.com/v1/parses/weight';
+        const { data } = await axios.get(url, {
+          headers: { Authorization: `Bearer ${process.env.WARCRAFTLOGS_KEY}` },
+          params: { character, realm, spec },
+        });
+        return data; 
+      }
+    );
 
-      const [icy, archon, actual] = await Promise.all([icyP, archonP, actualP]);
-      const keys = new Set<string>();
-      icy.forEach(w => keys.add(w.stat));
-      archon.forEach(w => keys.add(w.stat));
-      actual.forEach(w => keys.add(w.stat));
+    // 4) Merge them by stat name
+    const stats = icy.map(iv => iv.stat);
+    const merged = stats.map(stat => ({
+      stat,
+      icy:   icy.find(i => i.stat===stat)!.weight,
+      archon: archon.find(a => a.stat===stat)?.avgWeight ?? 0,
+      actual: actual.find(a => a.stat===stat)?.computedWeight ?? 0
+    }));
 
-      const merged = Array.from(keys).map(stat => ({
-        stat,
-        icy:    icy.find(w => w.stat === stat)?.weight ?? 0,
-        archon: archon.find(w => w.stat === stat)?.avgWeight ?? 0,
-        actual: actual.find(w => w.stat === stat)?.computedWeight ?? 0
-      }));
+    res.json(merged);
 
-      res.json(merged);
-    } catch (err: any) {
-      console.error(err);
-      res.status(500).json({ error: err.message });
-    }
+  } catch (e:any) {
+    res.status(500).json({ error: e.message });
   }
-);
+});
 
 export default router;
