@@ -1,5 +1,5 @@
 // frontend/src/pages/DashboardPage.tsx
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useStore } from '../hooks/useStore';
 import { useStatComparison } from '../hooks/useStatComparison';
 import FiltersSidebar from '../components/FiltersSidebar';
@@ -8,10 +8,14 @@ import ProfileCard from '../components/ProfileCard';
 import StatComparisonChart from '../components/StatComparisonChart';
 import Loadout, { GearItem, TalentIcon } from '../components/Loadout';
 import GearChart from '../components/GearChart';
-// Removed duplicate imports
+import { getGearAverages, GearAverageResponse } from '../api/gearAverage';
+import { getArchonStats, ArchonStat } from '../api/archon';
 
 export default function DashboardPage() {
   const { realm, character } = useStore();
+  const [gearData, setGearData] = useState<GearAverageResponse | null>(null);
+  const [archonStats, setArchonStats] = useState<ArchonStat[]>([]);
+
   // sidebar visibility toggle
   const [sidebarVisible, setSidebarVisible] = useState(true);
   // TODO: replace with a dropdown or derive from character’s class
@@ -20,12 +24,23 @@ export default function DashboardPage() {
   const { sortedByActual, loading, error } =
     useStatComparison(spec, realm, character);
 
+  // Fetch gear averages
+  useEffect(() => {
+    if (realm && character) {
+      getGearAverages(realm, character)
+        .then(data => setGearData(data))
+        .catch(err => console.error('gearAverage error', err));
+    }
+  }, [realm, character]);
+
+  // Fetch archon stats
+  useEffect(() => {
+    getArchonStats(spec)
+      .then(stats => setArchonStats(stats))
+      .catch(err => console.error('archonStats error', err));
+  }, [spec]);
+
   // Sample data for Loadout (will be replaced by live hook data later)
-  const sampleGear: GearItem[] = Array.from({ length: 15 }, (_, i) => ({
-    id: `gear${i}`,
-    iconUrl: 'https://via.placeholder.com/40',
-    itemLevel: 681 - (i % 5),
-  }));
   const sampleClassTalents: TalentIcon[] = Array.from({ length: 6 }, (_, i) => ({
     id: `class${i}`,
     iconUrl: 'https://via.placeholder.com/40',
@@ -37,17 +52,6 @@ export default function DashboardPage() {
   const sampleSpecTalents: TalentIcon[] = Array.from({ length: 3 }, (_, i) => ({
     id: `spec${i}`,
     iconUrl: 'https://via.placeholder.com/40',
-  }));
-  // Sample gear sets for comparison
-  const sampleArchonGear: GearItem[] = sampleGear.map((g, i) => ({
-    ...g,
-    id: `archon-${g.id}`,
-    itemLevel: g.itemLevel + 2, // example variation
-  }));
-  const sampleIcyGear: GearItem[] = sampleGear.map((g, i) => ({
-    ...g,
-    id: `icy-${g.id}`,
-    itemLevel: g.itemLevel - 2, // example variation
   }));
 
   return (
@@ -69,28 +73,23 @@ export default function DashboardPage() {
             )}
             {/* Gear loadout display */}
             <Loadout
-              averageIlvl={Math.round(
-                sampleGear.reduce((sum, g) => sum + g.itemLevel, 0) / sampleGear.length
-              )}
-              setPieces={4}
-              gear={sampleGear}
+              averageIlvl={gearData?.item_level_equipped ?? 0}
+              setPieces={gearData?.items.length ?? 0}
+              gear={gearData?.items.map(i => ({ id: i.slot, iconUrl: i.icon, itemLevel: i.item_level })) || []}
               classTalents={sampleClassTalents}
               heroTalents={sampleHeroTalents}
               specTalents={sampleSpecTalents}
             />
             {/* Gear comparison table */}
+            {/* TODO: integrate real archon & icy data */}
             <GearChart
-              gear={sampleGear}
-              archonGear={sampleArchonGear}
-              icyGear={sampleIcyGear}
-              averageIlvl={Math.round(
-                sampleGear.reduce((sum, g) => sum + g.itemLevel, 0) / sampleGear.length
-              )}
-              setPieces={4}
-              archonAverageIlvl={Math.round(
-                sampleArchonGear.reduce((sum, g) => sum + g.itemLevel, 0) / sampleArchonGear.length
-              )}
-              icyBestIlvl={Math.max(...sampleIcyGear.map(g => g.itemLevel))}
+              gear={gearData?.items.map(i => ({ id: i.slot, iconUrl: i.icon, itemLevel: i.item_level })) || []}
+              archonGear={[]}
+              icyGear={[]}
+              averageIlvl={gearData?.item_level_equipped ?? 0}
+              setPieces={gearData?.items.length ?? 0}
+              archonAverageIlvl={0}
+              icyBestIlvl={0}
             />
           </>
 

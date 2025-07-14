@@ -3,7 +3,7 @@ import AsyncSelect from 'react-select/async';
 import debounce from 'lodash.debounce';
 
 // Option for characters or guilds
-interface Option { label: string; value: { realm?:string; name: string } }
+interface Option { label: string; value: { id?: number; realm?: string; name: string; level?: number } }
 // Grouped options for AsyncSelect
 interface OptionGroup { label: string; options: Option[] }
 type SearchBarProps = { onSelect: (opt: { realm?:string; name:string }) => void; placeholder?: string };
@@ -22,13 +22,13 @@ export default function SearchBar({ onSelect, placeholder }: SearchBarProps) {
             fetch(`/api/search/guilds?search=${encodeURIComponent(input)}`),
           ]);
           const [charsData, guildsData] = await Promise.all([charsRes.json(), guildsRes.json()]);
-          const charOpts: Option[] = charsData.map((x:{name:string; realm:string}) => ({
-            label: `${x.name} — ${x.realm}`,
-            value: { realm: x.realm, name: x.name }
+          const charOpts: Option[] = charsData.map((x:{id:number; name:string; realm:string; level:number}) => ({
+            label: `${x.name} — ${x.realm} (lvl ${x.level})`,
+            value: { id: x.id, realm: x.realm, name: x.name, level: x.level }
           }));
-          const guildOpts: Option[] = guildsData.map((g:{name:string; realm:string}) => ({
+          const guildOpts: Option[] = guildsData.map((g:{id:number; name:string; realm:string}) => ({
             label: `${g.name} <${g.realm}>`,
-            value: { name: g.name, realm: g.realm }
+            value: { id: g.id, name: g.name, realm: g.realm }
           }));
           const groups: OptionGroup[] = [];
           if (charOpts.length) groups.push({ label: 'Characters', options: charOpts });
