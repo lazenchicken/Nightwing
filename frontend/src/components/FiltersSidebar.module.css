@@ -1,5 +1,6 @@
 .sidebar {
-  width: 240px;
+  /* responsive width: min 12rem, up to 15rem or 20vw */
+  width: clamp(12rem, 20vw, 15rem);
   background: var(--panel);
   border-right: 1px solid var(--border);
   padding: 0.5rem 0;

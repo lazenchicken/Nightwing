@@ -236,37 +236,79 @@ app.get('/api/stat-comparison', (req, res) => {
   return res.json(sample);
 });
 
-// Gear average endpoint: stub sample data
-app.get('/api/gearAverage', (req, res) => {
-  const { realm, name } = req.query;
-  console.log('GearAverage parameters:', { realm, name });
-  // Stubbed response
-  const sample = {
-    item_level_equipped: 700,
-    items: [
-      { slot: 'Head', item_level: 710, icon: 'https://via.placeholder.com/40' },
-      { slot: 'Chest', item_level: 705, icon: 'https://via.placeholder.com/40' },
-      { slot: 'Legs', item_level: 707, icon: 'https://via.placeholder.com/40' }
-    ],
-    averages: [
-      { slot: 'Head', communityAvg: 708, bis: 715 },
-      { slot: 'Chest', communityAvg: 703, bis: 712 },
-      { slot: 'Legs', communityAvg: 706, bis: 714 }
-    ]
-  };
-  return res.json(sample);
+// Gear average endpoint: proxy Raider.IO gear data
+// Gear average endpoint: fetch equipped and BIS gear from Raider.IO
+// Gear average endpoint: proxy Raider.IO gear data
+app.get('/api/gearAverage', async (req, res) => {
+    const { realm, name, region = 'us', spec } = req.query;
+  try {
+    console.log('Fetching gear & BIS from Raider.IO:', { realm, name, region, spec });
+    let url = `https://raider.io/api/v1/characters/profile?region=${region}&realm=${realm}&name=${name}&fields=gear,gear_bis`;
+    // If spec slug provided (e.g. druid-balance-raids-single-target), extract spec part for raider.io
+    if (spec && typeof spec === 'string') {
+      const parts = spec.split('-');
+      if (parts.length >= 2) {
+        const specName = parts[1];
+        url += `&spec=${specName}`;
+      }
+    }
+    const resp = await axios.get(url);
+    const g = resp.data.gear;
+    const bis = resp.data.gear_bis;
+    const items = (g.items || []).map(i => ({ slot: i.slot, item_level: i.item_level, icon: i.icon_url }));
+    const averages = (bis.items || []).map(i => ({
+      slot: i.slot,
+      communityAvg: g.items.find(x => x.slot === i.slot)?.item_level || 0,
+      bis: i.item_level
+    }));
+    return res.json({ item_level_equipped: g.item_level_equipped, items, averages });
+  } catch (err) {
+    console.error('gearAverage error', err.message);
+    return res.status(500).json({ error: err.message });
+  }
 });
 
-// Archon stats endpoint: stub sample data
-app.get('/api/archon', (req, res) => {
-  const { spec } = req.query;
-  console.log('Archon parameters:', { spec });
-  const sample = [
-    { stat: 'Haste', avgWeight: 1.1 },
-    { stat: 'Critical Strike', avgWeight: 0.9 },
-    { stat: 'Mastery', avgWeight: 1.2 }
-  ];
-  return res.json(sample);
+// Icy Veins stat weights endpoint: scrape static page for weights
+const cheerio = require('cheerio');
+app.get('/api/icyveins/:slug', async (req, res) => {
+  const { slug } = req.params;
+  try {
+    const url = `https://www.icy-veins.com/wow/building-your-${slug}`;
+    console.log('Scraping Icy Veins weights from:', url);
+    const html = await axios.get(url).then(r => r.data);
+    const $ = cheerio.load(html);
+    const weights = [];
+    $('table.stats-table tbody tr').each((_, el) => {
+      const stat = $(el).find('td').eq(0).text().trim();
+      const weight = parseFloat($(el).find('td').eq(1).text().trim());
+      if (stat && !isNaN(weight)) weights.push({ stat, weight });
+    });
+    return res.json(weights);
+  } catch (err) {
+    console.error('icyveins scrape error', err.message);
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+// Archon.gg stats endpoint: fetch stat weights for given spec
+// Archon stats endpoint: proxy via WarcraftLogs parse-weight
+app.get('/api/archon', async (req, res) => {
+  const { realm, name, spec } = req.query;
+  if (!realm || !name || !spec) {
+    return res.status(400).json({ error: 'realm, name & spec query params required' });
+  }
+  try {
+    console.log('Proxying Archon stats from Warcraft Logs:', { realm, name, spec });
+    const r = await axios.get('https://www.warcraftlogs.com/v1/parses/weight', {
+      params: { realm, character: name, spec },
+      headers: { Authorization: `Bearer ${process.env.ARCHON_KEY}` }
+    });
+    const weights = (r.data || []).map(w => ({ stat: w.stat, avgWeight: w.computedWeight }));
+    return res.json(weights);
+  } catch (err) {
+    console.error('archon proxy error', err.message);
+    return res.status(500).json({ error: err.message });
+  }
 });
 
 // RaiderIO profile endpoint: stub sample data for frontend
@@ -286,6 +328,39 @@ app.get('/api/raiderio', (req, res) => {
     raid_progression: {}
   };
   return res.json(stub);
+});
+
+// Talent icons endpoint: fetch selected talents and icons from Blizzard Profile API
+app.get('/api/talents', async (req, res) => {
+  const { realm, name, spec, region = 'us' } = req.query;
+  if (!realm || !name) {
+    return res.status(400).json({ error: 'realm and name query params required' });
+  }
+  try {
+    const token = await getBlizzardToken();
+    const realmSlug = realm.toString().toLowerCase().replace(/\s+/g, '-');
+    const url = `https://${region}.api.blizzard.com/profile/wow/character/${realmSlug}/${name}/talents`;
+    const params = {
+      namespace: `profile-${region}`,
+      locale: region === 'eu' ? 'en_GB' : 'en_US',
+      access_token: token
+    };
+    console.log('Fetching talents from Blizzard:', { realm: realmSlug, name, spec, region });
+    const resp = await axios.get(url, { params });
+    const talents = (resp.data.talents || []).filter(t => t.selected).map(t => ({
+      id: String(t.spell.id),
+      icon: t.spell.icon,
+      tier: t.tier_position
+    }));
+    // Group talents by tier ranges
+    const classTalents = talents.filter(t => t.tier <= 1).map(t => ({ id: t.id, iconUrl: `https://render-${region}.worldofwarcraft.com/icons/56/${t.icon}.jpg` }));
+    const heroTalents = talents.filter(t => t.tier >= 2 && t.tier <= 4).map(t => ({ id: t.id, iconUrl: `https://render-${region}.worldofwarcraft.com/icons/56/${t.icon}.jpg` }));
+    const specTalents = talents.filter(t => t.tier >= 5).map(t => ({ id: t.id, iconUrl: `https://render-${region}.worldofwarcraft.com/icons/56/${t.icon}.jpg` }));
+    return res.json({ classTalents, heroTalents, specTalents });
+  } catch (err) {
+    console.error('talents fetch error', err.message);
+    return res.status(500).json({ error: err.message });
+  }
 });
 
 // Serve static frontend in production (must come after API routes)

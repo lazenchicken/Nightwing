@@ -3,7 +3,6 @@
 
 /* frontend/src/components/GearChart.module.css */
 
-/* Gear comparison table container */
 .gearTable {
   background: var(--panel);
   border: 1px solid var(--border);
@@ -31,9 +30,10 @@
   color: var(--fg-alt);
 }
 
-/* Each gear set row */
+/* Each gear set row: wrap cells so all are visible on any screen */
 .row {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
 }
 
@@ -45,11 +45,11 @@
   color: var(--fg);
 }
 
-/* Individual gear cell */
 .cell {
   position: relative;
   width: 40px;
   height: 40px;
+  flex: 0 0 auto; /* fixed size, allow wrap */
 }
 
 .cell img {
@@ -73,12 +73,101 @@
 }
 
 /* Summary cell at end of each row */
-/* Summary cell at end of each row */
 .summaryCell {
+  flex: 0 0 auto;
   width: 60px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: bold;
   color: var(--fg);
+}
+/* Placeholder box when no icon is available */
+.placeholder {
+  width: 100%;
+  height: 100%;
+  background: var(--border);
+  border-radius: 4px;
+}
+
+/* Recommendations layout */
+.recommendations {
+  display: flex;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.recommendationSection {
+  flex: 1;
+}
+
+.recommendationTable {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 8px;
+}
+
+.recommendationTable th,
+.recommendationTable td {
+  border: 1px solid var(--border);
+  padding: 4px 8px;
+  text-align: left;
+}
+
+.talentGrid {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.talentIcon {
+  width: 40px;
+  height: 40px;
+}
+
+.talentIcon img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.talentPlaceholder {
+  width: 100%;
+  height: 100%;
+  background: var(--border);
+  border-radius: 4px;
+}
+
+/* Responsive scaling for smaller screens */
+@media (max-width: 1200px) {
+  .gearTable {
+    padding: 8px;
+  }
+  .cell {
+    width: 32px;
+    height: 32px;
+  }
+  .levelBadge {
+    font-size: 0.6rem;
+  }
+}
+@media (max-width: 800px) {
+  .gearTable {
+    padding: 4px;
+    gap: 4px;
+  }
+  .row {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .cell {
+    width: 28px;
+    height: 28px;
+  }
+  .levelBadge {
+    font-size: 0.5rem;
+    bottom: -2px;
+  }
 }

@@ -51,10 +51,14 @@ router.get('/stat-comparison', async (req, res) => {
       archonKey,
       600,
       async () => {
-        const r = await axios.get('https://api.archon.gg/stats', {
-          params: { spec },
-          headers: { 'x-api-key': process.env.ARCHON_KEY }
-        });
+        // Use Archon.gg parse-weight endpoint similar to Warcraft Logs
+        const r = await axios.get(
+          'https://api.archon.gg/v1/parses/weight',
+          {
+            params: { realm, character, spec },
+            headers: { 'x-api-key': process.env.ARCHON_KEY }
+          }
+        );
         return r.data;
       }
     );

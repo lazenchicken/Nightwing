@@ -2,10 +2,12 @@
 
 .loadout {
   display: flex;
+  flex-wrap: wrap;
   background: var(--bg-alt);
   border: 1px solid var(--border);
   border-radius: 4px;
   overflow: hidden;
+  gap: 16px;
 }
 
 .gearSection {
@@ -99,4 +101,16 @@
   height: 40px;
   object-fit: cover;
   border-radius: 4px;
+}
+
+@media (max-width: 768px) {
+  .loadout {
+    flex-direction: column;
+  }
+  .talentSection {
+    width: 100%;
+    border-left: none;
+    border-top: 1px solid var(--border);
+    padding-top: 8px;
+  }
 }

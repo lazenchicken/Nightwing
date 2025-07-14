@@ -9,6 +9,17 @@
   --accent-heal:    #3b82f6;
   --border: #2a2a42;
 }
+:root {
+  --bg:    #0f0f1a;
+  --panel: #17172b;
+  --fg:    #e0e0e0;
+  --fg-muted: #888;
+  --accent-primary: #4dd0e1;
+  --accent-dps:     #f59e0b;
+  --accent-cd:      #8b5cf6;
+  --accent-heal:    #3b82f6;
+  --border: #2a2a42;
+}
 
 * { box-sizing: border-box; }
 
@@ -18,19 +29,37 @@ body {
   color: var(--fg);
   font-family: Inter, sans-serif;
 }
-
-a { color: var(--accent-primary); text-decoration: none; }
-a:hover { text-decoration: underline; }
-
-/* Hide all scrollbars but preserve scrolling */
-::-webkit-scrollbar {
-  width: 0;
-  height: 0;
+/* Make root container full-height for flex layouts */
+html, body, #root {
+  min-height: 100%;
+  width: 100%;
 }
+/* Dashboard layout */
+/* Responsive root font-size for scalable UI */
 html {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;     /* Firefox */
+  font-size: clamp(14px, 1.5vw, 16px);
 }
-html::-webkit-scrollbar {
-  display: none;
+/* Show scrollbars in dashboard areas */
+.dashboard-container::-webkit-scrollbar,
+.dashboard-main::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+/* Dashboard container and main content */
+.dashboard-container {
+  display: flex;
+  flex-direction: row;   /* ensure sidebar and main are side by side */
+  height: 100%;
+  overflow: auto;
+}
+.dashboard-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+}
+@media (max-width: 768px) {
+  .dashboard-container {
+    flex-direction: column;
+  }
 }
