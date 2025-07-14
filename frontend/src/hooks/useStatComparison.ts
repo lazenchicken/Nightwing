@@ -20,9 +20,10 @@ export function useStatComparison(
 
   useEffect(() => {
     setLoading(true);
+    setError(null);
     axios
-      .get<Stat[]>(`/api/stat-comparison`, {
-        params: { spec, realm, character }
+      .get<Stat[]>('/api/stat-comparison', {
+        params: { spec, realm, character },
       })
       .then(r => {
         setData(r.data);
@@ -34,8 +35,7 @@ export function useStatComparison(
       });
   }, [spec, realm, character]);
 
-  // sort descending by “actual”
-  const sortedByActual = [...data].sort((a, b) => b.actual - a.actual);
+  const sortedByActual = [...data].sort((a,b)=> b.actual - a.actual);
 
   return { data, sortedByActual, loading, error };
 }

@@ -1,25 +1,62 @@
-import React from 'react';
+import React, { useMemo, useEffect } from 'react';
 import AsyncSelect from 'react-select/async';
 import debounce from 'lodash.debounce';
 
-interface Option { label: string; value: { realm:string; name:string } }
-export default function SearchBar({ onSelect }: { onSelect: (opt:Option) => void }) {
-  const load = debounce(async (input:string) => {
-    if (!input) return [];
-    const r = await fetch(`/api/search/characters?search=${encodeURIComponent(input)}`);
-    const data = await r.json();
-    return data.map((x:{name:string;realm:string}) => ({
-      label: `${x.name} — ${x.realm}`,
-      value: { realm:x.realm, name:x.name }
-    }));
-  }, 300);
+// Option for characters or guilds
+interface Option { label: string; value: { realm?:string; name: string } }
+// Grouped options for AsyncSelect
+interface OptionGroup { label: string; options: Option[] }
+type SearchBarProps = { onSelect: (opt: { realm?:string; name:string }) => void; placeholder?: string };
+export default function SearchBar({ onSelect, placeholder }: SearchBarProps) {
+  // Debounced fetcher invoking callback with options
+  const debouncedFetch = useMemo(
+    () => debounce(
+      async (input: string, callback: (opts: OptionGroup[]) => void) => {
+        if (!input) {
+          callback([]);
+          return;
+        }
+        try {
+          const [charsRes, guildsRes] = await Promise.all([
+            fetch(`/api/search/characters?search=${encodeURIComponent(input)}`),
+            fetch(`/api/search/guilds?search=${encodeURIComponent(input)}`),
+          ]);
+          const [charsData, guildsData] = await Promise.all([charsRes.json(), guildsRes.json()]);
+          const charOpts: Option[] = charsData.map((x:{name:string; realm:string}) => ({
+            label: `${x.name} — ${x.realm}`,
+            value: { realm: x.realm, name: x.name }
+          }));
+          const guildOpts: Option[] = guildsData.map((g:{name:string; realm:string}) => ({
+            label: `${g.name} <${g.realm}>`,
+            value: { name: g.name, realm: g.realm }
+          }));
+          const groups: OptionGroup[] = [];
+          if (charOpts.length) groups.push({ label: 'Characters', options: charOpts });
+          if (guildOpts.length) groups.push({ label: 'Guilds', options: guildOpts });
+          callback(groups);
+        } catch (err) {
+          console.error('search error', err);
+          callback([]);
+        }
+      },
+      300
+    ),
+    []
+  );
+  // Wrap into promise-based loader
+  const loadOptions = (input: string) =>
+    new Promise<OptionGroup[]>(resolve => {
+      debouncedFetch(input, resolve);
+    });
+  // Cancel on unmount
+  useEffect(() => () => debouncedFetch.cancel(), [debouncedFetch]);
 
   return (
     <AsyncSelect<Option>
       cacheOptions
-      loadOptions={load}
-      onChange={opt => opt && onSelect(opt)}
-      placeholder="Search players..."
+      loadOptions={loadOptions}
+      onChange={opt => opt && onSelect(opt.value)}
+      placeholder={placeholder}
     />
   );
 }

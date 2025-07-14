@@ -1,0 +1,84 @@
+/* frontend/src/components/GearChart.module.css */
+
+
+/* frontend/src/components/GearChart.module.css */
+
+/* Gear comparison table container */
+.gearTable {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+/* Header row styling */
+.headerRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+/* Stats row in header */
+.statsRow {
+  display: flex;
+  gap: 8px;
+  font-size: 0.875rem;
+  color: var(--fg-alt);
+}
+
+/* Each gear set row */
+.row {
+  display: flex;
+  gap: 8px;
+}
+
+/* Label for each data row */
+.rowLabel {
+  width: 80px;
+  font-weight: bold;
+  align-self: center;
+  color: var(--fg);
+}
+
+/* Individual gear cell */
+.cell {
+  position: relative;
+  width: 40px;
+  height: 40px;
+}
+
+.cell img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+/* Item level badge overlay */
+.levelBadge {
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #8b5cf6;
+  color: #fff;
+  padding: 2px 4px;
+  font-size: 0.75rem;
+  border-radius: 2px;
+}
+
+/* Summary cell at end of each row */
+/* Summary cell at end of each row */
+.summaryCell {
+  width: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  color: var(--fg);
+}

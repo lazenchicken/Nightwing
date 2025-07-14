@@ -8,6 +8,6 @@ const prisma = new PrismaClient();
 
 // No real OAuth strategy: just serialize/deserialize a dummy user
 passport.serializeUser((u, done) => done(null, u));
-passport.deserializeUser((u, done) => done(null, u));
+passport.deserializeUser((u: any, done) => done(null, u));
 
 export default passport;

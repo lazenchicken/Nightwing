@@ -21,3 +21,16 @@ body {
 
 a { color: var(--accent-primary); text-decoration: none; }
 a:hover { text-decoration: underline; }
+
+/* Hide all scrollbars but preserve scrolling */
+::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+html {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;     /* Firefox */
+}
+html::-webkit-scrollbar {
+  display: none;
+}

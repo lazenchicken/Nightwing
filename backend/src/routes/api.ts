@@ -35,7 +35,7 @@ router.get('/stat-comparison', async (req, res) => {
         $('h2:contains("Stat Priority")')
           .next('table')
           .find('tbody tr')
-          .each((_, row) => {
+          .each((_: any, row: any) => {
             const cols = $(row).find('td');
             const stat = cols.eq(0).text().trim();
             const weight = parseFloat(cols.eq(1).text().replace(/[^0-9.]/g, ''));
