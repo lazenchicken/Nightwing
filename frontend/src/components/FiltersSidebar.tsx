@@ -70,7 +70,7 @@ export default function FiltersSidebar() {
             className={styles.sectionHeader}
             onClick={() => setContentTypeOpen(open => !open)}
           >
-            <h3>Content Type</h3>
+            <h3>Build</h3>
             {contentTypeOpen ? (
               <FaChevronDown className={styles.chevron} />
             ) : (
