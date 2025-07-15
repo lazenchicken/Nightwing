@@ -1,4 +1,4 @@
-import axios from 'axios';
+import api from './client';
 
 export interface GearSlotAverage {
   slot: string;
@@ -20,7 +20,7 @@ export interface GearAverageResponse {
  * Fetches community & BIS averages for each gear slot via your backend.
  */
 export async function getGearAverages(realm: string, name: string, spec?: string): Promise<GearAverageResponse> {
-  const res = await axios.get<GearAverageResponse>('/api/gearAverage', {
+  const res = await api.get<GearAverageResponse>('/api/gearAverage', {
     params: { realm, name, spec }
   });
   return res.data;
