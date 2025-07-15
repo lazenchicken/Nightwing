@@ -22,13 +22,10 @@ router.get('/stat-comparison', async (req, res) => {
   try {
     // 1) Icy Veins weights
     const icyKey = `icy:${spec}`;
-    const icy = await cacheable<{ stat: string; weight: number }[]>(
-      icyKey,
-      600,
-      async () => {
-        const { data: html } = await axios.get(
-          `https://www.icy-veins.com/wow/${spec}`
-        );
+    let icy: { stat: string; weight: number }[] = [];
+    try {
+      icy = await cacheable(icyKey, 600, async () => {
+        const { data: html } = await axios.get(`https://www.icy-veins.com/wow/${spec}`);
         const cheerio = require('cheerio');
         const $ = cheerio.load(html);
         const out: { stat: string; weight: number }[] = [];
@@ -42,43 +39,44 @@ router.get('/stat-comparison', async (req, res) => {
             if (stat && !isNaN(weight)) out.push({ stat, weight });
           });
         return out;
-      }
-    );
+      });
+    } catch (e: any) {
+      console.error('Icy Veins fetch failed:', e.message);
+    }
 
     // 2) Archon.gg weights
     const archonKey = `archon:${spec}`;
-    const archon = await cacheable<{ stat: string; avgWeight: number }[]>(
-      archonKey,
-      600,
-      async () => {
-        // Use Archon.gg parse-weight endpoint similar to Warcraft Logs
-        const r = await axios.get(
-          'https://api.archon.gg/v1/parses/weight',
-          {
-            params: { realm, character, spec },
-            headers: { 'x-api-key': process.env.ARCHON_KEY }
-          }
-        );
+    let archon: { stat: string; avgWeight: number }[] = [];
+    try {
+      archon = await cacheable(archonKey, 600, async () => {
+        const r = await axios.get('https://api.archon.gg/v1/parses/weight', {
+          params: { realm, character, spec },
+          headers: { 'x-api-key': process.env.ARCHON_KEY }
+        });
         return r.data;
-      }
-    );
+      });
+    } catch (e: any) {
+      console.error('Archon.gg fetch failed:', e.message);
+    }
 
     // 3) “Actual” weights from Warcraft Logs
     const actualKey = `actual:${realm}:${character}:${spec}`;
-    const actual = await cacheable<{ stat: string; computedWeight: number }[]>(
-      actualKey,
-      600,
-      async () => {
-        const r = await axios.get(
-          'https://www.warcraftlogs.com/v1/parses/weight',
-          {
-            params: { realm, character, spec },
-            headers: { Authorization: `Bearer ${process.env.WARCRAFTLOGS_KEY}` }
-          }
-        );
+    let actual: { stat: string; computedWeight: number }[] = [];
+    try {
+      actual = await cacheable(actualKey, 600, async () => {
+        // Warcraft Logs expects lowercase, slugified realm and name, and spec with underscores
+        const realmSlug = realm.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+        const nameSlug = character.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+        const specParam = spec.replace(/-/g, '_');
+        const r = await axios.get('https://www.warcraftlogs.com/v1/parses/weight', {
+          params: { realm: realmSlug, name: nameSlug, spec: specParam },
+          headers: { Authorization: `Bearer ${process.env.WARCRAFTLOGS_KEY}` }
+        });
         return r.data;
-      }
-    );
+      });
+    } catch (e: any) {
+      console.error('Warcraft Logs fetch failed:', e.message);
+    }
 
     // 4) Merge them by stat name
     const stats = icy.map(i => i.stat);

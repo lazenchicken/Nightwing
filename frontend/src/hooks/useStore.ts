@@ -12,7 +12,7 @@ interface Store {
 
 export const useStore = create<Store>((set) => ({
   realm: 'Area52',
-  character: 'MyCharacter',
+  character: 'lazendk',
   role: 'dps',    // default; can switch via some UI
   setRealm: (r) => set({ realm: r }),
   setCharacter: (c) => set({ character: c }),

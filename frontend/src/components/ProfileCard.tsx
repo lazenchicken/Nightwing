@@ -24,14 +24,19 @@ export default function ProfileCard({ realm, name }: { realm: string; name: stri
       }
     }
   };
-  // Use sampleProfile when loading or no real profile
-  const displayProfile: any = loading || !profile ? sampleProfile : profile;
+  // Use sampleProfile when loading, no profile, or missing key data
+  const displayProfile: any =
+    loading || !profile || !profile.mythic_plus_scores_by_season
+      ? sampleProfile
+      : profile;
   // derive avatar URL from WoW Armory render service
-  const realmSlug = displayProfile.realm.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-  const nameSlug = displayProfile.name.toLowerCase();
+  const realmSlug = (displayProfile.realm ?? '').toLowerCase().replace(/[^a-z0-9]+/g, '-');
+  const nameSlug = (displayProfile.name ?? '').toLowerCase();
   const avatarUrl = `https://render-us.worldofwarcraft.com/character/${realmSlug}/${nameSlug}.jpg`;
   // aggregate stats
-  const score = displayProfile.mythic_plus_scores_by_season.current.dungeons.reduce((sum: number, d: any) => sum + d.level, 0);
+  const score = (
+    displayProfile.mythic_plus_scores_by_season?.current?.dungeons ?? []
+  ).reduce((sum: number, d: any) => sum + d.level, 0);
   // extract first raid progression entry
   const raidEntries = Object.entries(displayProfile.raid_progression) as [string, any][];
   const [raidName, raidProg] = raidEntries[0] || ['Unknown', { bosses: [] }];
