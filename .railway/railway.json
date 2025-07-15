@@ -1,0 +1,15 @@
+{
+  "builds": [
+    {
+      "service": "backend",
+      "path": "backend",
+      "type": "nixpacks"
+    },
+    {
+      "service": "frontend",
+      "path": "frontend",
+      "type": "dockerfile",
+      "dockerfilePath": "frontend/Dockerfile"
+    }
+  ]
+}
